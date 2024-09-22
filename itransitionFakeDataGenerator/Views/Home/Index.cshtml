@@ -55,6 +55,7 @@
 
     <script>
         //Request for the fakeData
+        let page = 2;
         async function getData(url, cb) {
             const data = await fetch(url);
             cb(data);
@@ -62,6 +63,7 @@
         const $tbody = document.getElementById("table-body");
 
         const cb = async (data) => {
+            page = 2;
             $tbody.innerHTML = null;
             const usersList = await data.json();
             let index = 1;
@@ -135,7 +137,6 @@
 
         //infinity scroll
         let limit = 10;
-        let page = 2;
         let lastPositionScroll = 0
         tableContainer.addEventListener("scroll", e => {
             const tableBodyHeight = getComputedStyle($tbody).height;
