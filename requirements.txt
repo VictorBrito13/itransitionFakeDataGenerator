@@ -29,3 +29,15 @@ Error number can be entered with a slider (0..10) or field  (0..1000) — they i
 
 Support 3 type of errors - delete character in random position, add random character (from a proper alphabet) in random position, swap near characters.
 Type of the error have to be chosen randomly with equal probabilities (when user specifies 1000 errors, "noisy user data" should not be too long or too short).
+
+What data do we need to generate the fake data?
+-Region
+-Number of Errors
+-Seed
+
+What data should be generated?
+-Random identifier WITHOUT ERRORS!!!!!!!!!!!
+-Name
+-Address
+-Phone numbers
+

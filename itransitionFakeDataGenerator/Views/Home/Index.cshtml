@@ -2,7 +2,174 @@
     ViewData["Title"] = "Home Page";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+<div class="d-flex">
+    @{
+        int seed = (int) TempData["seed"];
+        int limit = (int) TempData["limit"];
+        string region = (string) TempData["region"];
+        int errors = (int) TempData["errors"];
+    }
+    <form action="/Home/Index" id="formGetData" class="d-flex" method="get">
+        <div>
+            <label for="region">Region</label>
+            <select name="region" id="region" data-region="@region">
+                @{
+                    Dictionary<string, string> supportedRegions = (Dictionary<string, string>) TempData["supportedRegions"];
+                    if(supportedRegions != null) {
+                        foreach(KeyValuePair<string, string> kvp in supportedRegions) {
+                            <option selected value="@kvp.Key">@supportedRegions[kvp.Key]</option>
+                        }
+                    }
+                }
+            </select>
+        </div>
+        <div>
+            <label for="control-error-input">Errors</label>
+            <input type="range" value="@(errors / 100)" min="0" max="10" id="control-error-slide">
+            <input type="number" name="errors" value="@(errors)" min="0" max="1000" id="control-error-input">
+        </div>
+        <div>
+            <label for="seed">Seed</label>
+            <input type="number" name="seed" id="seed" value="@(seed)">
+            <button type="button" id="btn-random-seed" class="btn bg-transparent"><i class="bi bi-shuffle"></i></button>
+            <input type="hidden" name="limit" id="limit" value="@(limit)">
+        </div>
+    </form>
+    <button>Export</button>
+</div>
+<div style="height: 80vh; overflow: auto;" id="tableContainer">
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th scope="col">Index</th>
+                <th scope="col">ID</th>
+                <th scope="col">Full name</th>
+                <th scope="col">Address</th>
+                <th scope="col">Phone Number</th>
+            </tr>
+        </thead>
+        <tbody id="table-body">
+        </tbody>
+    </table>
+
+
+    <script>
+        //Request for the fakeData
+        async function getData(url, cb) {
+            const data = await fetch(url);
+            cb(data);
+        }
+        const $tbody = document.getElementById("table-body");
+
+        const cb = async (data) => {
+            $tbody.innerHTML = null;
+            const usersList = await data.json();
+            let index = 1;
+
+            usersList.forEach(user => {
+                const $tr = document.createElement("tr");
+                const $td = document.createElement("td");
+                $td.textContent = index++;
+                $tr.appendChild($td);
+                
+                for(key in user) {
+                    if(key == "gender") continue;
+                    const $td = document.createElement("td");
+
+                    $td.textContent = user[key];
+                    $tr.appendChild($td);
+                }
+                $tbody.appendChild($tr);
+            });
+        }
+
+        //Form Controls
+        const $controlErrorInput = document.getElementById("control-error-input");
+        const $controlErrorSlide = document.getElementById("control-error-slide");
+        const $controlSeed = document.getElementById("seed");
+        const $controlRegion = document.getElementById("region");
+        const $btnRandomSeed = document.getElementById("btn-random-seed");
+        const $controlLimit = document.getElementById("limit");
+        const $formGetData = document.getElementById("formGetData");
+
+        //Current value for the region select
+        const currentRegion = $controlRegion.dataset.region;
+        if(currentRegion !== null) {
+            $controlRegion.value = currentRegion;
+        }
+
+
+        //Listeners to get the data
+        $controlErrorSlide.addEventListener("change", e => {
+            const value = e.target.value;
+            $controlErrorInput.value = value * 100;
+            getData(`${location.protocol}//${location.host}/FakeData/GenerateData?errors=${$controlErrorInput.value}&seed=${$controlSeed.value}&region=${$controlRegion.value}&page=1&limit=${$controlLimit.value}`, cb);
+
+        });
+
+        $controlErrorInput.addEventListener("change", e => {
+            const value = e.target.value;
+            $controlErrorSlide.value = value / 100;
+            getData(`${location.protocol}//${location.host}/FakeData/GenerateData?errors=${$controlErrorInput.value}&seed=${$controlSeed.value}&region=${$controlRegion.value}&page=1&limit=${$controlLimit.value}`, cb);
+
+        });
+
+        $controlRegion.addEventListener("change", e => {
+            getData(`${location.protocol}//${location.host}/FakeData/GenerateData?errors=${$controlErrorInput.value}&seed=${$controlSeed.value}&region=${$controlRegion.value}&page=1&limit=${$controlLimit.value}`, cb);
+
+        });
+
+        $controlSeed.addEventListener("change", e => {
+            getData(`${location.protocol}//${location.host}/FakeData/GenerateData?errors=${$controlErrorInput.value}&seed=${$controlSeed.value}&region=${$controlRegion.value}&page=1&limit=${$controlLimit.value}`, cb);
+
+        });
+
+        $btnRandomSeed.addEventListener("click", e => {
+            const rand = Math.round(Math.random() * 10_000);
+            $controlSeed.value = rand;
+            getData(`${location.protocol}//${location.host}/FakeData/GenerateData?errors=${$controlErrorInput.value}&seed=${$controlSeed.value}&region=${$controlRegion.value}&page=1&limit=${$controlLimit.value}`, cb);
+
+        });
+
+        getData(`${location.protocol}//${location.host}/FakeData/GenerateData?errors=${$controlErrorInput.value}&seed=${$controlSeed.value}&region=${$controlRegion.value}&page=1&limit=${$controlLimit.value}`, cb);
+
+        //infinity scroll
+        let limit = 10;
+        let page = 2;
+        let lastPositionScroll = 0
+        tableContainer.addEventListener("scroll", e => {
+            const tableBodyHeight = getComputedStyle($tbody).height;
+
+            const cb = async (data) => {
+                $tbody.innerHTML = null;
+                const usersList = await data.json();
+                let index = 1;
+
+                usersList.forEach(user => {
+                    const $tr = document.createElement("tr");
+                    const $td = document.createElement("td");
+                    $td.textContent = index++;
+                    $tr.appendChild($td);
+                
+                    for(key in user) {
+                        if(key == "gender") continue;
+                        const $td = document.createElement("td");
+
+                        $td.textContent = user[key];
+                        $tr.appendChild($td);
+                    }
+                    $tbody.appendChild($tr);
+                });
+            
+                tableContainer.scrollTop = lastPositionScroll;
+                console.log(lastPositionScroll)
+            }
+
+            if(parseInt(tableBodyHeight) - tableContainer.scrollTop < 700) {
+                lastPositionScroll = tableContainer.scrollTop;
+                getData(`${location.protocol}//${location.host}/FakeData/GenerateData?errors=${$controlErrorInput.value}&seed=${$controlSeed.value}&region=${$controlRegion.value}&page=${page++}&limit=${limit}`, cb);
+            } 
+        });
+
+    </script>
 </div>
