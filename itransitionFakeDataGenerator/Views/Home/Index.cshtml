@@ -35,7 +35,7 @@
             <input type="hidden" name="limit" id="limit" value="@(limit)">
         </div>
     </form>
-    <button>Export</button>
+    <a href="" download="" id="download-file">Export</a>
 </div>
 <div style="height: 80vh; overflow: auto;" id="tableContainer">
     <table class="table table-striped">
@@ -170,6 +170,13 @@
                 lastPositionScroll = tableContainer.scrollTop;
                 getData(`${location.protocol}//${location.host}/FakeData/GenerateData?errors=${$controlErrorInput.value}&seed=${$controlSeed.value}&region=${$controlRegion.value}&page=${page++}&limit=${limit}`, cb);
             } 
+        });
+
+        //Download file
+        const $download = document.getElementById("download-file");
+
+        $download.addEventListener("click", e => {
+            $download.href = `${location.protocol}//${location.host}/FakeData/GenerateFile?errors=${$controlErrorInput.value}&seed=${$controlSeed.value}&region=${$controlRegion.value}&page=${page++}&limit=${limit}`;
         });
 
     </script>

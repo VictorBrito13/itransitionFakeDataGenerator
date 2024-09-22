@@ -25,7 +25,7 @@ namespace Services.GenerateFakeData
             return hashUserName ^ hashUserPhone;
         }
     }
-    class FakeData() {
+    class FakeData {
         private List<UserModel> _users = [];
         public List<UserModel> Generate(int seed, string region, int limit, int errors, int page) {
             //Generate the data
@@ -49,6 +49,5 @@ namespace Services.GenerateFakeData
             _users = HashSet;
             return _users;
         }
-
     }
 }
