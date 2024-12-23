@@ -31,7 +31,7 @@ namespace Services.GenerateFakeData
             //Generate the data
             Randomizer.Seed = new Random(seed);
             var userGenerator = new Faker<UserModel>(region);
-            string charSet = new Lorem(region).Sentence(22);
+            string charSet = new Lorem(region).Sentence(22).Replace(",", " ");
 
             Console.WriteLine(page);
 

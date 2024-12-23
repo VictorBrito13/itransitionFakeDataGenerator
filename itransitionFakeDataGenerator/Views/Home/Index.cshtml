@@ -9,10 +9,12 @@
         string region = (string) TempData["region"];
         int errors = (int) TempData["errors"];
     }
-    <form action="/Home/Index" id="formGetData" class="d-flex" method="get">
+
+    @* Settings to generate data *@
+    <form action="/Home/Index" id="formGetData" class="border-bottom p-3 d-flex align-items-start justify-content-evenly w-100" method="get">
         <div>
             <label for="region">Region</label>
-            <select name="region" id="region" data-region="@region">
+            <select name="region" id="region" class="form-select" data-region="@region">
                 @{
                     Dictionary<string, string> supportedRegions = (Dictionary<string, string>) TempData["supportedRegions"];
                     if(supportedRegions != null) {
@@ -25,19 +27,19 @@
         </div>
         <div>
             <label for="control-error-input">Errors</label>
-            <input type="range" value="@(errors / 100)" min="0" max="10" id="control-error-slide">
-            <input type="number" name="errors" value="@(errors)" min="0" max="1000" id="control-error-input">
+            <input class="form-range" type="range" value="@(errors / 100)" min="0" max="10" id="control-error-slide">
+            <input class="form-control" type="number" name="errors" value="@(errors)" min="0" max="1000" id="control-error-input">
         </div>
         <div>
             <label for="seed">Seed</label>
-            <input type="number" name="seed" id="seed" value="@(seed)">
             <button type="button" id="btn-random-seed" class="btn bg-transparent"><i class="bi bi-shuffle"></i></button>
+            <input class="form-control" type="number" name="seed" id="seed" value="@(seed)">
             <input type="hidden" name="limit" id="limit" value="@(limit)">
         </div>
+        <a href="" class="btn btn-primary" download="" id="download-file">Export</a>
     </form>
-    <a href="" download="" id="download-file">Export</a>
 </div>
-<div style="height: 80vh; overflow: auto;" id="tableContainer">
+<div style="height: 75vh; overflow: auto;" id="tableContainer">
     <table class="table table-striped">
         <thead>
             <tr>
@@ -58,20 +60,22 @@
         let page = 2;
         async function getData(url, cb) {
             const data = await fetch(url);
-            cb(data);
+            const json = await data.json();
+            cb(json);
         }
         const $tbody = document.getElementById("table-body");
 
         const cb = async (data) => {
-            page = 2;
+            console.clear()
+            console.log("pagina cuando seed ejecuta el callback", page)
+            @* page = 1; *@
             $tbody.innerHTML = null;
-            const usersList = await data.json();
-            let index = 1;
+            let index = 0;
 
-            usersList.forEach(user => {
+            data.forEach(user => {
                 const $tr = document.createElement("tr");
                 const $td = document.createElement("td");
-                $td.textContent = index++;
+                $td.textContent = ++index;
                 $tr.appendChild($td);
                 
                 for(key in user) {
@@ -83,6 +87,31 @@
                 }
                 $tbody.appendChild($tr);
             });
+            console.log("indice", index)
+
+            //infinity scroll
+            let limit = 10;
+            let lastPositionScroll = 0;
+            const infinityScrollCB = (entries) => {
+                entries.forEach(entry => {
+                    console.log("ultima entrada detectada")
+                    console.log(entry.isIntersecting);
+
+                    if(entry.isIntersecting) {
+                        page++;
+                        console.log("haciendo peticion...")
+                        getData(`${location.protocol}//${location.host}/FakeData/GenerateData?errors=${$controlErrorInput.value}&seed=${$controlSeed.value}&region=${$controlRegion.value}&page=${page}&limit=${limit}`, cb);
+                    };
+                    console.log("pagina", page)
+                });
+            }
+
+            let intersectionObserver = new IntersectionObserver(infinityScrollCB, {
+                root: document,
+                rootMargin: "0px",
+                threshold: 1
+            })
+            intersectionObserver.observe($tbody.lastElementChild);
         }
 
         //Form Controls
@@ -105,40 +134,36 @@
         $controlErrorSlide.addEventListener("change", e => {
             const value = e.target.value;
             $controlErrorInput.value = value * 100;
-            getData(`${location.protocol}//${location.host}/FakeData/GenerateData?errors=${$controlErrorInput.value}&seed=${$controlSeed.value}&region=${$controlRegion.value}&page=1&limit=${$controlLimit.value}`, cb);
+            getData(`${location.protocol}//${location.host}/FakeData/GenerateData?errors=${$controlErrorInput.value}&seed=${$controlSeed.value}&region=${$controlRegion.value}&page=${page}&limit=${limit}`, cb);
 
         });
 
         $controlErrorInput.addEventListener("change", e => {
             const value = e.target.value;
             $controlErrorSlide.value = value / 100;
-            getData(`${location.protocol}//${location.host}/FakeData/GenerateData?errors=${$controlErrorInput.value}&seed=${$controlSeed.value}&region=${$controlRegion.value}&page=1&limit=${$controlLimit.value}`, cb);
+            getData(`${location.protocol}//${location.host}/FakeData/GenerateData?errors=${$controlErrorInput.value}&seed=${$controlSeed.value}&region=${$controlRegion.value}&page=${page}&limit=${limit}`, cb);
 
         });
 
         $controlRegion.addEventListener("change", e => {
-            getData(`${location.protocol}//${location.host}/FakeData/GenerateData?errors=${$controlErrorInput.value}&seed=${$controlSeed.value}&region=${$controlRegion.value}&page=1&limit=${$controlLimit.value}`, cb);
+            getData(`${location.protocol}//${location.host}/FakeData/GenerateData?errors=${$controlErrorInput.value}&seed=${$controlSeed.value}&region=${$controlRegion.value}&page=${page}&limit=${limit}`, cb);
 
         });
 
         $controlSeed.addEventListener("change", e => {
-            getData(`${location.protocol}//${location.host}/FakeData/GenerateData?errors=${$controlErrorInput.value}&seed=${$controlSeed.value}&region=${$controlRegion.value}&page=1&limit=${$controlLimit.value}`, cb);
+            getData(`${location.protocol}//${location.host}/FakeData/GenerateData?errors=${$controlErrorInput.value}&seed=${$controlSeed.value}&region=${$controlRegion.value}&page=${page}&limit=${limit}`, cb);
 
         });
 
         $btnRandomSeed.addEventListener("click", e => {
             const rand = Math.round(Math.random() * 10_000);
             $controlSeed.value = rand;
-            getData(`${location.protocol}//${location.host}/FakeData/GenerateData?errors=${$controlErrorInput.value}&seed=${$controlSeed.value}&region=${$controlRegion.value}&page=1&limit=${$controlLimit.value}`, cb);
+            getData(`${location.protocol}//${location.host}/FakeData/GenerateData?errors=${$controlErrorInput.value}&seed=${$controlSeed.value}&region=${$controlRegion.value}&page=${page}&limit=${limit}`, cb);
 
         });
 
         getData(`${location.protocol}//${location.host}/FakeData/GenerateData?errors=${$controlErrorInput.value}&seed=${$controlSeed.value}&region=${$controlRegion.value}&page=1&limit=${$controlLimit.value}`, cb);
-
-        //infinity scroll
-        let limit = 10;
-        let lastPositionScroll = 0
-        tableContainer.addEventListener("scroll", e => {
+        @* tableContainer.addEventListener("scroll", e => {
             const tableBodyHeight = getComputedStyle($tbody).height;
 
             const cb = async (data) => {
@@ -170,7 +195,7 @@
                 lastPositionScroll = tableContainer.scrollTop;
                 getData(`${location.protocol}//${location.host}/FakeData/GenerateData?errors=${$controlErrorInput.value}&seed=${$controlSeed.value}&region=${$controlRegion.value}&page=${page++}&limit=${limit}`, cb);
             } 
-        });
+        }); *@
 
         //Download file
         const $download = document.getElementById("download-file");

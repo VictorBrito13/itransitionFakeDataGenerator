@@ -12,7 +12,7 @@ namespace Services.ExportFile
 
                 foreach (var user in data)
                 {
-                    sw.WriteLine($"{user.ID},{user.name},{user.gender},{user.address},{user.phone}");
+                    sw.WriteLine($"{user.ID},{user.name},{user.gender},{user.address.Replace(",", " ")},{user.phone}");
                 }
             }
             Console.WriteLine("Archivo Generado");

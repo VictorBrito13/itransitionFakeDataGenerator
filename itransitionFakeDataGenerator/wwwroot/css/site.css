@@ -20,3 +20,14 @@ html {
 body {
   margin-bottom: 60px;
 }
+
+thead {
+  position: sticky;
+  top: 0;
+  background: #fff;
+  outline: 1px solid #000;
+}
+
+#table-body {
+  height: 100vh;
+}
