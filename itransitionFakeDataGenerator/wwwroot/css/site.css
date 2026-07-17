@@ -190,6 +190,23 @@
   background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%238B949E' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e");
 }
 
+[data-bs-theme="dark"] .form-select option {
+  background-color: var(--color-surface-elevated);
+  color: var(--color-text-primary);
+  padding: 0.5rem;
+}
+
+[data-bs-theme="dark"] .form-select option:checked {
+  background-color: var(--color-primary);
+  color: var(--color-surface);
+  font-weight: 600;
+}
+
+[data-bs-theme="dark"] .form-select option:hover {
+  background-color: var(--glass-bg-hover);
+  color: var(--color-primary);
+}
+
 [data-bs-theme="dark"] .input-group-text {
   background-color: var(--color-surface-elevated);
   color: var(--color-text-secondary);

@@ -2,88 +2,68 @@ namespace ErrorsType
 {
     class Errors
     {
+        private static Random _random = new Random();
 
-        //This class generate errors only if the number of errors are greater than 0
+        public static void SetSeed(int seed)
+        {
+            _random = new Random(seed);
+        }
+
         public static string Modifier(string s, int errors, string charSet)
         {
+            if (errors <= 0 || string.IsNullOrEmpty(s)) return s;
+
             string stringModified = s;
-            if(errors > 0) {
-                for (int i = 0; i <= errors; i++)
+            for (int i = 0; i < errors; i++)
+            {
+                int errorType = _random.Next(1, 4);
+
+                if (errorType == 1)
                 {
-                    //Choose the error type
-                    int errorType = new Random().Next(1, 4);
-                    //delete character in random position
-                    if(errorType == 1) {
-                        stringModified = DeleteCharacter(stringModified, errors);
-                    }
-                    //add random character (from a proper alphabet) in random position
-                    else if(errorType == 2) {
-                        stringModified = AddRandomCharacter(stringModified, errors, charSet);
-                    }
-                    //swap near characters
-                    else if(errorType == 3) {
-                        stringModified = SwapCharacters(stringModified, errors);
-                    }
+                    stringModified = DeleteCharacter(stringModified);
+                }
+                else if (errorType == 2)
+                {
+                    stringModified = AddRandomCharacter(stringModified, charSet);
+                }
+                else if (errorType == 3)
+                {
+                    stringModified = SwapCharacters(stringModified);
                 }
             }
-            
+
             return stringModified;
         }
 
-        public static string DeleteCharacter(string s, int probability)
+        public static string DeleteCharacter(string s)
         {
-            Random rand = new Random();
-            string newS = s;
+            if (string.IsNullOrEmpty(s) || s.Length == 0) return s;
 
-            if(newS.Length == 0) return "";
-
-            if(rand.Next() > probability)
-            {
-                //Select a random position
-                int position = rand.Next(0, newS.Length);
-                newS = newS[..position] + newS[(position+1)..];
-            }
-            return newS;
+            int position = _random.Next(0, s.Length);
+            return s[..position] + s[(position + 1)..];
         }
 
-        public static string SwapCharacters(string s, int probability)
+        public static string SwapCharacters(string s)
         {
-            Random rand = new Random();
-            string newS = s;
+            if (string.IsNullOrEmpty(s) || s.Length < 2) return s;
 
-            if(rand.Next() > probability)
-            {
-                int position = rand.Next(0, newS.Length);
+            int position = _random.Next(0, s.Length - 1);
 
-                if(newS.Length < 2) return "";
-
-                if(position == newS.Length -1) {
-                    char currentChar = newS[position];
-                    char prevChar = newS[position-1];
-                    newS = newS[..(position-1)] + currentChar + prevChar;
-                } else {
-                    char currentChar = newS[position];
-                    char nextChar = newS[position+1];
-                    newS = newS[..position] + nextChar + currentChar + newS[(position + 2)..];
-                }
-            }
-            return newS;
+            char currentChar = s[position];
+            char nextChar = s[position + 1];
+            return s[..position] + nextChar + currentChar + s[(position + 2)..];
         }
-        
-        public static string AddRandomCharacter(string s, int probability, string charSet)
+
+        public static string AddRandomCharacter(string s, string charSet)
         {
-            Random rand = new Random();
-            string newS = s;
+            if (string.IsNullOrEmpty(s)) return s;
+
             string charSetWithNoSpaces = charSet.Replace(" ", "");
+            if (charSetWithNoSpaces.Length == 0) return s;
 
-            if(newS.Length == 0) return "";
-
-            if(rand.Next() > probability)
-            {
-                int position = rand.Next(0, newS.Length);
-                newS = newS[..(position+1)] + charSetWithNoSpaces[rand.Next(0, charSetWithNoSpaces.Length)] + newS[(position+1)..];
-            }
-            return newS;
+            int position = _random.Next(0, s.Length);
+            char randomChar = charSetWithNoSpaces[_random.Next(0, charSetWithNoSpaces.Length)];
+            return s[..(position + 1)] + randomChar + s[(position + 1)..];
         }
     }
 }

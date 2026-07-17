@@ -4,18 +4,18 @@ namespace Services.ExportFile
 {
     public class CSV
     {
-        public static void Export(string fileName, List<UserModel> data)
+        public static void Export(string fileName, List<UserModel> data, string filesDir)
         {
-            Console.WriteLine(Directory.GetCurrentDirectory());
-            using(StreamWriter sw = new StreamWriter($"{Directory.GetCurrentDirectory()}/files/{fileName}.csv", false, Encoding.UTF8)) {
+            string filePath = Path.Combine(filesDir, $"{fileName}.csv");
+            using(StreamWriter sw = new StreamWriter(filePath, false, Encoding.UTF8)) {
                 sw.WriteLine("ID,Name,Gender,Address,Phone");
 
                 foreach (var user in data)
                 {
-                    sw.WriteLine($"{user.ID},{user.name},{user.gender},{user.address.Replace(",", " ")},{user.phone}");
+                    string safeAddress = user.address?.Replace(",", " ") ?? "";
+                    sw.WriteLine($"{user.ID},{user.name},{user.gender},{safeAddress},{user.phone}");
                 }
             }
-            Console.WriteLine("Archivo Generado");
         }
     }
 }

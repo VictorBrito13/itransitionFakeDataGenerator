@@ -4,10 +4,10 @@
 
 <div class="d-flex">
     @{
-        int seed = (int) TempData["seed"];
-        int limit = (int) TempData["limit"];
-        string region = (string) TempData["region"];
-        int errors = (int) TempData["errors"];
+        int seed = (int)(TempData["seed"] ?? 0);
+        int limit = (int)(TempData["limit"] ?? 20);
+        string region = (string)(TempData["region"] ?? "es_MX");
+        int errors = (int)(TempData["errors"] ?? 0);
     }
 
     @* Settings to generate data *@
@@ -19,7 +19,11 @@
                     Dictionary<string, string> supportedRegions = (Dictionary<string, string>) TempData["supportedRegions"];
                     if(supportedRegions != null) {
                         foreach(KeyValuePair<string, string> kvp in supportedRegions) {
-                            <option selected value="@kvp.Key">@supportedRegions[kvp.Key]</option>
+                            if(kvp.Key == region) {
+                                <option selected="selected" value="@kvp.Key">@kvp.Value</option>
+                            } else {
+                                <option value="@kvp.Key">@kvp.Value</option>
+                            }
                         }
                     }
                 }
@@ -56,153 +60,119 @@
 
 
     <script>
-        //Request for the fakeData
-        let page = 2;
-        async function getData(url, cb) {
-            const data = await fetch(url);
-            const json = await data.json();
-            cb(json);
+        let page = 1;
+        let totalRecords = 0;
+        let isLoading = false;
+
+        async function getData(url, append) {
+            if (isLoading) return;
+            isLoading = true;
+
+            try {
+                const data = await fetch(url);
+                const json = await data.json();
+                renderData(json, append);
+            } finally {
+                isLoading = false;
+            }
         }
+
         const $tbody = document.getElementById("table-body");
 
-        const cb = async (data) => {
-            console.clear()
-            console.log("pagina cuando seed ejecuta el callback", page)
-            @* page = 1; *@
-            $tbody.innerHTML = null;
-            let index = 0;
+        function renderData(data, append) {
+            if (!append) {
+                $tbody.innerHTML = '';
+                totalRecords = 0;
+            }
 
             data.forEach(user => {
+                totalRecords++;
                 const $tr = document.createElement("tr");
-                const $td = document.createElement("td");
-                $td.textContent = ++index;
-                $tr.appendChild($td);
-                
-                for(key in user) {
-                    if(key == "gender") continue;
-                    const $td = document.createElement("td");
 
+                const $indexTd = document.createElement("td");
+                $indexTd.textContent = totalRecords;
+                $tr.appendChild($indexTd);
+
+                for (let key in user) {
+                    if (key === "gender") continue;
+                    const $td = document.createElement("td");
                     $td.textContent = user[key];
                     $tr.appendChild($td);
                 }
                 $tbody.appendChild($tr);
             });
-            console.log("indice", index)
 
-            //infinity scroll
-            let limit = 10;
-            let lastPositionScroll = 0;
-            const infinityScrollCB = (entries) => {
-                entries.forEach(entry => {
-                    console.log("ultima entrada detectada")
-                    console.log(entry.isIntersecting);
-
-                    if(entry.isIntersecting) {
-                        page++;
-                        console.log("haciendo peticion...")
-                        getData(`${location.protocol}//${location.host}/FakeData/GenerateData?errors=${$controlErrorInput.value}&seed=${$controlSeed.value}&region=${$controlRegion.value}&page=${page}&limit=${limit}`, cb);
-                    };
-                    console.log("pagina", page)
-                });
-            }
-
-            let intersectionObserver = new IntersectionObserver(infinityScrollCB, {
-                root: document,
-                rootMargin: "0px",
-                threshold: 1
-            })
-            intersectionObserver.observe($tbody.lastElementChild);
+            setupIntersectionObserver();
         }
 
-        //Form Controls
+        let intersectionObserver = null;
+
+        function setupIntersectionObserver() {
+            if (intersectionObserver) {
+                intersectionObserver.disconnect();
+            }
+
+            const lastRow = $tbody.lastElementChild;
+            if (!lastRow) return;
+
+            intersectionObserver = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        page++;
+                        getData(`${location.protocol}//${location.host}/FakeData/GenerateData?errors=${$controlErrorInput.value}&seed=${$controlSeed.value}&region=${$controlRegion.value}&page=${page}&limit=10`, true);
+                    }
+                });
+            }, {
+                root: document.getElementById("tableContainer"),
+                rootMargin: "100px",
+                threshold: 0.1
+            });
+
+            intersectionObserver.observe(lastRow);
+        }
+
         const $controlErrorInput = document.getElementById("control-error-input");
         const $controlErrorSlide = document.getElementById("control-error-slide");
         const $controlSeed = document.getElementById("seed");
         const $controlRegion = document.getElementById("region");
         const $btnRandomSeed = document.getElementById("btn-random-seed");
         const $controlLimit = document.getElementById("limit");
-        const $formGetData = document.getElementById("formGetData");
 
-        //Current value for the region select
         const currentRegion = $controlRegion.dataset.region;
-        if(currentRegion !== null) {
+        if (currentRegion) {
             $controlRegion.value = currentRegion;
         }
 
+        function reloadData() {
+            page = 1;
+            totalRecords = 0;
+            getData(`${location.protocol}//${location.host}/FakeData/GenerateData?errors=${$controlErrorInput.value}&seed=${$controlSeed.value}&region=${$controlRegion.value}&page=${page}&limit=20`, false);
+        }
 
-        //Listeners to get the data
         $controlErrorSlide.addEventListener("change", e => {
-            const value = e.target.value;
-            $controlErrorInput.value = value * 100;
-            getData(`${location.protocol}//${location.host}/FakeData/GenerateData?errors=${$controlErrorInput.value}&seed=${$controlSeed.value}&region=${$controlRegion.value}&page=${page}&limit=${limit}`, cb);
-
+            $controlErrorInput.value = e.target.value * 100;
+            reloadData();
         });
 
         $controlErrorInput.addEventListener("change", e => {
-            const value = e.target.value;
-            $controlErrorSlide.value = value / 100;
-            getData(`${location.protocol}//${location.host}/FakeData/GenerateData?errors=${$controlErrorInput.value}&seed=${$controlSeed.value}&region=${$controlRegion.value}&page=${page}&limit=${limit}`, cb);
-
+            $controlErrorSlide.value = e.target.value / 100;
+            reloadData();
         });
 
-        $controlRegion.addEventListener("change", e => {
-            getData(`${location.protocol}//${location.host}/FakeData/GenerateData?errors=${$controlErrorInput.value}&seed=${$controlSeed.value}&region=${$controlRegion.value}&page=${page}&limit=${limit}`, cb);
+        $controlRegion.addEventListener("change", () => reloadData());
+        $controlSeed.addEventListener("change", () => reloadData());
 
+        $btnRandomSeed.addEventListener("click", () => {
+            $controlSeed.value = Math.round(Math.random() * 10000);
+            reloadData();
         });
 
-        $controlSeed.addEventListener("change", e => {
-            getData(`${location.protocol}//${location.host}/FakeData/GenerateData?errors=${$controlErrorInput.value}&seed=${$controlSeed.value}&region=${$controlRegion.value}&page=${page}&limit=${limit}`, cb);
+        const initialLimit = $controlLimit.value || 20;
+        getData(`${location.protocol}//${location.host}/FakeData/GenerateData?errors=${$controlErrorInput.value}&seed=${$controlSeed.value}&region=${$controlRegion.value}&page=1&limit=${initialLimit}`, false);
 
-        });
-
-        $btnRandomSeed.addEventListener("click", e => {
-            const rand = Math.round(Math.random() * 10_000);
-            $controlSeed.value = rand;
-            getData(`${location.protocol}//${location.host}/FakeData/GenerateData?errors=${$controlErrorInput.value}&seed=${$controlSeed.value}&region=${$controlRegion.value}&page=${page}&limit=${limit}`, cb);
-
-        });
-
-        getData(`${location.protocol}//${location.host}/FakeData/GenerateData?errors=${$controlErrorInput.value}&seed=${$controlSeed.value}&region=${$controlRegion.value}&page=1&limit=${$controlLimit.value}`, cb);
-        @* tableContainer.addEventListener("scroll", e => {
-            const tableBodyHeight = getComputedStyle($tbody).height;
-
-            const cb = async (data) => {
-                $tbody.innerHTML = null;
-                const usersList = await data.json();
-                let index = 1;
-
-                usersList.forEach(user => {
-                    const $tr = document.createElement("tr");
-                    const $td = document.createElement("td");
-                    $td.textContent = index++;
-                    $tr.appendChild($td);
-                
-                    for(key in user) {
-                        if(key == "gender") continue;
-                        const $td = document.createElement("td");
-
-                        $td.textContent = user[key];
-                        $tr.appendChild($td);
-                    }
-                    $tbody.appendChild($tr);
-                });
-            
-                tableContainer.scrollTop = lastPositionScroll;
-                console.log(lastPositionScroll)
-            }
-
-            if(parseInt(tableBodyHeight) - tableContainer.scrollTop < 700) {
-                lastPositionScroll = tableContainer.scrollTop;
-                getData(`${location.protocol}//${location.host}/FakeData/GenerateData?errors=${$controlErrorInput.value}&seed=${$controlSeed.value}&region=${$controlRegion.value}&page=${page++}&limit=${limit}`, cb);
-            } 
-        }); *@
-
-        //Download file
         const $download = document.getElementById("download-file");
-
-        $download.addEventListener("click", e => {
-            $download.href = `${location.protocol}//${location.host}/FakeData/GenerateFile?errors=${$controlErrorInput.value}&seed=${$controlSeed.value}&region=${$controlRegion.value}&page=${page++}&limit=${limit}`;
+        $download.addEventListener("click", () => {
+            $download.href = `${location.protocol}//${location.host}/FakeData/GenerateFile?errors=${$controlErrorInput.value}&seed=${$controlSeed.value}&region=${$controlRegion.value}&page=1&limit=${totalRecords || 20}`;
         });
-
     </script>
 </div>
