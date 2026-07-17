@@ -822,3 +822,85 @@ select,
 [data-bs-theme="dark"] .progress-bar {
   background-color: var(--color-primary);
 }
+
+/* --------------------------------------------------------------------------
+   10. GLASS UTILITY ENHANCEMENTS
+   -------------------------------------------------------------------------- */
+
+/* Primary glass button — filled with primary color */
+.glass-button-primary {
+  background: rgba(var(--color-primary-rgb), 0.15);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border: 1px solid rgba(var(--color-primary-rgb), 0.4);
+  box-shadow: 0 4px 16px rgba(var(--color-primary-rgb), 0.2);
+  border-radius: var(--radius-md);
+  color: var(--color-primary);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.glass-button-primary:hover {
+  background: rgba(var(--color-primary-rgb), 0.25);
+  border-color: var(--color-primary);
+  box-shadow: 0 8px 24px rgba(var(--color-primary-rgb), 0.3);
+  color: var(--color-primary);
+}
+
+.glass-button-primary:active {
+  transform: scale(0.98);
+}
+
+/* Glass panel — larger container for page sections */
+.glass-panel {
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
+  border-radius: var(--radius-xl);
+  padding: 2rem;
+}
+
+/* Glass divider — subtle separator line */
+.glass-divider {
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    var(--glass-border) 20%,
+    var(--glass-border) 80%,
+    transparent 100%
+  );
+  border: none;
+  margin: 1.5rem 0;
+}
+
+/* Focus-visible ring for keyboard navigation on glass elements */
+.glass:focus-visible,
+.glass-card:focus-visible,
+.glass-button:focus-visible,
+.glass-button-primary:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+/* Glass hover lift effect */
+.glass-hover:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4), 0 0 0 1px var(--glass-border);
+}
+
+/* Glass status indicators */
+.glass-success {
+  border-left: 3px solid var(--color-success);
+}
+
+.glass-error {
+  border-left: 3px solid var(--color-error);
+}
+
+.glass-warning {
+  border-left: 3px solid var(--color-warning);
+}
