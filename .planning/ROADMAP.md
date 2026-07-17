@@ -19,7 +19,7 @@
 
 Plans:
 - [x] 01-01-PLAN.md — Design tokens, dark theme override, glass utility classes, component base styles ✅ (2026-07-17)
-- [ ] 01-02-PLAN.md — Layout redesign with glass navigation, meaningful icons, IA structure
+- [x] 01-02-PLAN.md — Layout redesign with glass navigation, meaningful icons, IA structure ✅ (2026-07-17)
 
 ### Phase 2: Component Library Implementation
 **Goal:** Build reusable UI components following the design system — form controls, data table, navigation, buttons, cards.
