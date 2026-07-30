@@ -34,7 +34,6 @@ steps:
       - --max-instances=1
       - --concurrency=80
       - --no-cpu-throttling
-      - --service-account apps-deployer@macro-dogfish-502720-r1.iam.gserviceaccount.com
 
 substitutions:
   _ARTIFACT_REGION: us-central1
