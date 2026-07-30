@@ -1,0 +1,40 @@
+steps:
+  - name: gcr.io/cloud-builders/docker
+    args:
+      - build
+      - -t
+      - $_ARTIFACT_REGION-docker.pkg.dev/$PROJECT_ID/$_ARTIFACT_REPO_NAME/$_SERVICE_NAME:$$SHORT_SHA
+      - -t
+      - $_ARTIFACT_REGION-docker.pkg.dev/$PROJECT_ID/$_ARTIFACT_REPO_NAME/$_SERVICE_NAME:latest
+      - .
+
+  - name: gcr.io/cloud-builders/docker
+    args:
+      - push
+      - $_ARTIFACT_REGION-docker.pkg.dev/$PROJECT_ID/$_ARTIFACT_REPO_NAME/$_SERVICE_NAME
+
+  - name: gcr.io/google.com/cloudsdktool/cloud-sdk
+    entrypoint: gcloud
+    args:
+      - run
+      - deploy
+      - $_SERVICE_NAME
+      - --image=$_ARTIFACT_REGION-docker.pkg.dev/$PROJECT_ID/$_ARTIFACT_REPO_NAME/$_SERVICE_NAME:$BUILD_ID
+      - --region=$_ARTIFACT_REGION
+      - --platform=managed
+      - --allow-unauthenticated
+      - --cpu=1
+      - --memory=512Mi
+      - --min-instances=0
+      - --max-instances=1
+      - --concurrency=80
+      - --no-cpu-throttling
+
+substitutions:
+  _ARTIFACT_REGION: us-central1
+  _ARTIFACT_REPO_NAME: itransition-fake-data-generation
+  _SERVICE_NAME: fake-data-generator
+
+options:
+  substitution_option: ALLOW_LOOSE
+  logging: CLOUD_LOGGING_ONLY
