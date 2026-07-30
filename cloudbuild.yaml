@@ -11,7 +11,12 @@ steps:
   - name: gcr.io/cloud-builders/docker
     args:
       - push
-      - $_ARTIFACT_REGION-docker.pkg.dev/$PROJECT_ID/$_ARTIFACT_REPO_NAME/$_SERVICE_NAME
+      - $_ARTIFACT_REGION-docker.pkg.dev/$PROJECT_ID/$_ARTIFACT_REPO_NAME/$_SERVICE_NAME:$SHORT_SHA
+
+  - name: gcr.io/cloud-builders/docker
+    args:
+      - push
+      - $_ARTIFACT_REGION-docker.pkg.dev/$PROJECT_ID/$_ARTIFACT_REPO_NAME/$_SERVICE_NAME:latest
 
   - name: gcr.io/google.com/cloudsdktool/cloud-sdk
     entrypoint: gcloud
@@ -29,6 +34,7 @@ steps:
       - --max-instances=1
       - --concurrency=80
       - --no-cpu-throttling
+      - --service-account apps-deployer@macro-dogfish-502720-r1.iam.gserviceaccount.com
 
 substitutions:
   _ARTIFACT_REGION: us-central1
